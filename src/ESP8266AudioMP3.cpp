@@ -48,6 +48,8 @@
 #include "AudioOutputI2S.h"
 #include "AudioFileSourcePROGMEM.h"
 
+#include "judge.hpp"
+
 extern "C"
 {
 #include "user_interface.h"
@@ -55,8 +57,12 @@ extern "C"
 // To run, set your ESP8266 build to 160MHz, update the SSID info, and upload.
 
 // Enter your WiFi setup here:
-const char *SSID = "zhiwu";
-const char *PASSWORD = "zhiwu123";
+// const char *SSID = "zhiwu";
+// const char *PASSWORD = "zhiwu123";
+
+// Enter your WiFi setup here:
+const char *SSID = "weisi";
+const char *PASSWORD = "WEIsi123456";
 
 AudioGeneratorMP3 *mp3;
 AudioFileSourceHTTPStream *file;
@@ -123,14 +129,14 @@ int http_get_mp3(uint8_t *buffer, AudioFileSourceHTTPStream *file, uint32_t recv
 
 #include <SoftwareSerial.h>
 
-SoftwareSerial serialCmd(D1, D2, false, 2 * 16);
+// SoftwareSerial // serialCmd(D1, D2, false, 2 * 16);
 
 void setup()
 {
   system_update_cpu_freq(SYS_CPU_160MHZ);
 
-  serialCmd.begin(115200);
-  Serial.println("Connecting to Control");
+  // serialCmd.begin(115200);
+  // serialCmd.println("Connecting to Control");
 
   Serial.begin(115200);
   delay(1000);
@@ -149,6 +155,8 @@ void setup()
     delay(1000);
   }
   Serial.println("Connected");
+
+  judge_init();
 
   audioLogger = &Serial;
 
@@ -177,11 +185,10 @@ void setup()
 
 void loop()
 {
-  // static int lastms = 0;
+  static int lastms = 0;
 
   if (mp3->isRunning())
   {
-
     if (in->getSize() - in->getPos() < 200)
     {
       mp3->stop();
@@ -192,6 +199,7 @@ void loop()
     //   Serial.printf("Running for %d ms...\n", lastms);
     //   Serial.flush();
     //  }
+
     if (!mp3->loop())
     {
       mp3->stop();
@@ -199,15 +207,16 @@ void loop()
   }
   else
   {
-    delay(2000);
+    delay(1000);
 
-    Serial.printf("MP3 ready\n");
-
-    if (serialCmd.available())
+    // if (serialCmd.available())
+    String tmp = judge_check();
+    if (tmp.length() != 0)
     {
+      Serial.printf("MP3 ready\n");
 
-      String tmp = serialCmd.readString();
-      serialCmd.println(tmp);
+      // String tmp = serialCmd.readString();
+      Serial.println(tmp);
 
       static char URL[0xFF] = {};
 
