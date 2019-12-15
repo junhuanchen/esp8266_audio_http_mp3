@@ -72,9 +72,12 @@ void audio_init()
   mp3 = new AudioGeneratorMP3();
   mp3->RegisterStatusCB(StatusCallback, (void *)"mp3");
 
-  digitalWrite(D0 , HIGH);
-  in = new AudioFileSourcePROGMEM(samplemp3, sizeof(samplemp3));
-  mp3->begin(in, out);
+  http_mp3 = new AudioFileSourceHTTPStream();
+  in = new AudioFileSourcePROGMEM();
+
+  // digitalWrite(D0 , HIGH);
+  // in = new AudioFileSourcePROGMEM(samplemp3, sizeof(samplemp3));
+  // mp3->begin(in, out);
 }
 
 bool audio_loop()

@@ -5,9 +5,9 @@ ADC_MODE(ADC_TOUT)
 
 uint8_t pin_key = D3;
 uint8_t pin_inh = D0;
-uint8_t pin_A = D2;
+uint8_t pin_A = D10;
 uint8_t pin_B = D1;
-uint8_t pin_C = D10;
+uint8_t pin_C = D2;
 
 // //uint16_t channel_switch(uint8_t channel_numbel);
 char channel_switch(uint8_t channel_numbel);

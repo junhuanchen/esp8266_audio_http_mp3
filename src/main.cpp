@@ -17,7 +17,7 @@ extern "C"
 #include "input.hpp"
 
 // #include <SoftwareSerial.h>
-// SoftwareSerial // serialCmd(D1, D2, false, 2 * 16);
+// SoftwareSerial serialCmd(D1, D3, false, 2 * 16);
 
 #define mp3_buf_max 1024 * 15
 static uint8_t mp3_buf[mp3_buf_max] = {};
@@ -43,9 +43,9 @@ void setup()
   // serialCmd.begin(115200);
   // serialCmd.println("Connecting to Control");
 
-  Serial.begin(115200);
-  delay(1000);
-  Serial.println("Jh Voice");
+  // Serial.begin(115200);
+  // delay(1000);
+  // Serial.println("Jh Voice");
 
   if (sdcard_init()) {
     if (sdcard_load_wifi()) {
@@ -62,13 +62,17 @@ void setup()
   input_init();
 }
 
+bool is_net = false;
+
 void wifi_loop() {
   // Try forever
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("Connecting to WiFi");
+    is_net = false;
   }
   else {
     Serial.println("Connected");
+    is_net = true;
   }
 }
 
@@ -76,8 +80,8 @@ void input_loop() {
   digitalWrite(D0, LOW);
   // if (serialCmd.available())
   String result = input_check();
-  if (result.length() != 0)
-  {
+  // serialCmd.println(result);
+  if (result.length() != 0) {
     // String tmp = serialCmd.readString();
     Serial.printf("play ready "), Serial.println(result);
     if (SD.exists(result)) {
@@ -88,26 +92,29 @@ void input_loop() {
           *tmp = fe.read(), tmp++;
         }
         fe.close();
-        in = new AudioFileSourcePROGMEM(mp3_buf, tmp - mp3_buf);
+
+        in->open(mp3_buf, tmp - mp3_buf);
 
         digitalWrite(D0 , HIGH);
         mp3->begin(in, out);
       }
-    } else {
+    } else if (is_net) {
       char tmp_url[0xFF] = {0};
       sprintf(tmp_url, "http://dict.youdao.com/dictvoice?audio=%s,fin&type=1", result.c_str());
       Serial.printf(tmp_url);
 
       http_mp3->open(tmp_url);
       int recvlen = get_http_mp3(mp3_buf, sizeof(mp3_buf), http_mp3);
-      in->open(mp3_buf, http_mp3->getSize());
+      in->open(mp3_buf, recvlen);
 
       digitalWrite(D0 , HIGH);
       mp3->begin(in, out);
-    
-      File mp3 = SD.open(result, FILE_WRITE);
-      mp3.write(mp3_buf, http_mp3->getSize());
-      mp3.close();
+
+      if (!SD.exists(result)) {
+        File mp3 = SD.open(result, FILE_WRITE);
+        mp3.write(mp3_buf, http_mp3->getSize());
+        mp3.close();
+      }
     }
   }
 }
@@ -115,8 +122,8 @@ void input_loop() {
 void loop()
 {
   if (audio_loop()) {
+    delay(1000);
     input_loop();
     wifi_loop();
-    delay(1000);
   }
 }
